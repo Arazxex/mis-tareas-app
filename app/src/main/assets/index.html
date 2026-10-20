@@ -1,0 +1,1002 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#4f46e5">
+  <title>Mis Tareas Pro</title>
+  <style>
+    :root {
+      --primary: #4f46e5;
+      --primary-active: #4338ca;
+      --bg: #f8fafc;
+      --surface: #ffffff;
+      --text: #0f172a;
+      --text-muted: #64748b;
+      --border: #e2e8f0;
+      --card-bg: #ffffff;
+      --green: #10b981;
+      --red: #ef4444;
+      --yellow: #f59e0b;
+      --blue: #3b82f6;
+      --radius: 18px;
+      --shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    }
+
+    body.dark {
+      --primary: #6366f1;
+      --primary-active: #4f46e5;
+      --bg: #090d16;
+      --surface: #131b2e;
+      --text: #f1f5f9;
+      --text-muted: #94a3b8;
+      --border: #1e293b;
+      --card-bg: #131b2e;
+      --shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: system-ui, -apple-system, Roboto, Helvetica, Arial, sans-serif;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      display: flex;
+      justify-content: center;
+      min-height: 100vh;
+      transition: background-color 0.25s ease, color 0.25s ease;
+    }
+
+    .app {
+      width: 100%;
+      max-width: 500px;
+      min-height: 100vh;
+      background: var(--bg);
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+
+    /* Banner flotante de Notificación / Recordatorio en pantalla */
+    .in-app-banner {
+      position: fixed;
+      top: 16px;
+      left: 50%;
+      transform: translateX(-50%) translateY(-120%);
+      width: 90%;
+      max-width: 440px;
+      background: var(--surface);
+      border: 2px solid var(--primary);
+      border-radius: 16px;
+      padding: 14px 16px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      z-index: 9999;
+      transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    .in-app-banner.show {
+      transform: translateX(-50%) translateY(0);
+    }
+
+    .banner-icon {
+      font-size: 1.8rem;
+    }
+
+    .banner-text {
+      flex: 1;
+    }
+
+    .banner-text h4 {
+      font-size: 0.95rem;
+      color: var(--primary);
+      font-weight: 700;
+      margin-bottom: 2px;
+    }
+
+    .banner-text p {
+      font-size: 0.85rem;
+      color: var(--text);
+    }
+
+    .banner-close {
+      border: none;
+      background: transparent;
+      font-size: 1.1rem;
+      color: var(--text-muted);
+      cursor: pointer;
+    }
+
+    /* Header */
+    header {
+      background: linear-gradient(135deg, var(--primary), #818cf8);
+      color: white;
+      padding: calc(env(safe-area-inset-top, 16px) + 14px) 20px 20px 20px;
+      border-bottom-left-radius: 24px;
+      border-bottom-right-radius: 24px;
+      box-shadow: 0 8px 20px rgba(79, 70, 229, 0.25);
+    }
+
+    .header-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .header-top h1 {
+      font-size: 1.55rem;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .icon-btn {
+      background: rgba(255, 255, 255, 0.22);
+      border: none;
+      color: white;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      font-size: 1.15rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      backdrop-filter: blur(8px);
+      transition: transform 0.1s ease;
+      position: relative;
+    }
+
+    .icon-btn:active {
+      transform: scale(0.9);
+    }
+
+    .icon-btn.active-notif::after {
+      content: '';
+      position: absolute;
+      top: 4px;
+      right: 4px;
+      width: 8px;
+      height: 8px;
+      background-color: #22c55e;
+      border-radius: 50%;
+      border: 1.5px solid white;
+    }
+
+    .header-bottom {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.85rem;
+    }
+
+    .badge {
+      background: rgba(255, 255, 255, 0.25);
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-weight: 700;
+      letter-spacing: 0.3px;
+    }
+
+    /* Input Section */
+    .input-section {
+      padding: 16px 16px 8px 16px;
+    }
+
+    .task-card-form {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 12px 14px;
+      box-shadow: var(--shadow);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .input-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    input[type="text"] {
+      flex: 1;
+      border: none;
+      outline: none;
+      background: transparent;
+      font-size: 1rem;
+      color: var(--text);
+      user-select: text;
+    }
+
+    input[type="text"]::placeholder {
+      color: var(--text-muted);
+    }
+
+    .add-btn {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      border: none;
+      background: var(--primary);
+      color: white;
+      font-size: 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      flex-shrink: 0;
+      transition: transform 0.1s ease;
+    }
+
+    .add-btn:active {
+      transform: scale(0.88);
+      background: var(--primary-active);
+    }
+
+    /* Opciones extras: Prioridad, Categoría y Recordatorio */
+    .extra-options {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      overflow-x: auto;
+      padding-top: 4px;
+      scrollbar-width: none;
+    }
+
+    .extra-options::-webkit-scrollbar {
+      display: none;
+    }
+
+    .chip-select, .date-input {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-size: 0.78rem;
+      font-weight: 600;
+      padding: 6px 10px;
+      border-radius: 12px;
+      outline: none;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    /* Barra de filtros */
+    .filter-bar {
+      display: flex;
+      gap: 8px;
+      padding: 10px 16px 6px 16px;
+      overflow-x: auto;
+    }
+
+    .filter-btn {
+      border: none;
+      background: transparent;
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .filter-btn.active {
+      background: #e0e7ff;
+      color: var(--primary);
+    }
+
+    body.dark .filter-btn.active {
+      background: #232d4b;
+      color: #a5b4fc;
+    }
+
+    /* Lista */
+    main {
+      flex: 1;
+      overflow-y: auto;
+      padding: 6px 16px 20px 16px;
+    }
+
+    ul {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .task-item {
+      display: flex;
+      align-items: center;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 12px 14px;
+      box-shadow: var(--shadow);
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .task-item::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 5px;
+    }
+    .priority-alta::before { background-color: var(--red); }
+    .priority-media::before { background-color: var(--yellow); }
+    .priority-baja::before { background-color: var(--green); }
+
+    .check-btn {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      border: 2px solid #cbd5e1;
+      background: transparent;
+      margin-right: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.15rem;
+      cursor: pointer;
+      flex-shrink: 0;
+      transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    .check-btn:active {
+      transform: scale(0.85);
+    }
+
+    .task-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .task-text {
+      font-size: 0.95rem;
+      color: var(--text);
+      word-break: break-word;
+      user-select: text;
+      font-weight: 500;
+    }
+
+    .task-meta {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      flex-wrap: wrap;
+    }
+
+    .tag-category {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      padding: 2px 7px;
+      border-radius: 6px;
+      font-weight: 600;
+    }
+
+    .tag-date {
+      display: flex;
+      align-items: center;
+      gap: 3px;
+      color: var(--primary);
+      font-weight: 600;
+    }
+
+    /* Estado completada */
+    .task-item.completed {
+      opacity: 0.75;
+      background: var(--bg);
+    }
+
+    .task-item.completed .check-btn {
+      background: var(--green);
+      border-color: var(--green);
+      animation: checkBounce 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    @keyframes checkBounce {
+      0% { transform: scale(0.6); }
+      70% { transform: scale(1.2); }
+      100% { transform: scale(1); }
+    }
+
+    .task-item.completed .task-text {
+      text-decoration: line-through;
+      color: var(--text-muted);
+    }
+
+    .del-btn {
+      border: none;
+      background: transparent;
+      font-size: 1.15rem;
+      padding: 6px;
+      cursor: pointer;
+      opacity: 0.55;
+      margin-left: 6px;
+      transition: transform 0.1s ease, opacity 0.15s ease;
+    }
+
+    .del-btn:active {
+      opacity: 1;
+      transform: scale(0.9);
+    }
+
+    /* Empty state */
+    .empty-state {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 50px 20px;
+      color: var(--text-muted);
+    }
+
+    .empty-state.show {
+      display: flex;
+    }
+
+    .empty-icon {
+      font-size: 3.2rem;
+      margin-bottom: 10px;
+    }
+
+    /* Footer */
+    footer {
+      padding: 10px 16px calc(env(safe-area-inset-bottom, 12px) + 10px) 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-top: 1px solid var(--border);
+    }
+
+    .footer-btn {
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      font-size: 0.85rem;
+      cursor: pointer;
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-weight: 600;
+    }
+
+    .footer-btn:active {
+      background: var(--bg);
+    }
+
+    .footer-btn.danger:active {
+      color: var(--red);
+    }
+
+    /* Marca de agua sutil */
+    .watermark {
+      text-align: center;
+      padding: 4px 0 calc(env(safe-area-inset-bottom, 8px) + 4px) 0;
+      font-size: 0.68rem;
+      font-weight: 700;
+      letter-spacing: 2.5px;
+      color: var(--text-muted);
+      opacity: 0.35;
+      text-transform: uppercase;
+      user-select: none;
+      pointer-events: none;
+    }
+
+    .watermark span {
+      color: var(--primary);
+      opacity: 1;
+      font-style: italic;
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <!-- Banner de notificación visual en pantalla -->
+    <div id="in-app-banner" class="in-app-banner">
+      <div class="banner-icon">⏰</div>
+      <div class="banner-text">
+        <h4 id="banner-title">¡Recordatorio de tarea!</h4>
+        <p id="banner-msg">Tienes una tarea pendiente.</p>
+      </div>
+      <button class="banner-close" id="banner-close">✕</button>
+    </div>
+
+    <!-- Header -->
+    <header>
+      <div class="header-top">
+        <h1>Mis Tareas</h1>
+        <div class="header-actions">
+          <button id="notif-btn" class="icon-btn" aria-label="Permisos de notificación" title="Notificaciones">🔔</button>
+          <button id="sound-btn" class="icon-btn" aria-label="Alternar sonido" title="Sonido">🔊</button>
+          <button id="theme-btn" class="icon-btn" aria-label="Alternar tema" title="Modo oscuro">🌙</button>
+        </div>
+      </div>
+      <div class="header-bottom">
+        <span id="date-label">Hoy</span>
+        <span class="badge" id="counter">0 pendientes</span>
+      </div>
+    </header>
+
+    <!-- Formulario con selector de Fecha y Hora para Recordatorio -->
+    <section class="input-section">
+      <form id="task-form" class="task-card-form">
+        <div class="input-row">
+          <input 
+            type="text" 
+            id="task-input" 
+            placeholder="¿Qué necesitas hacer hoy?" 
+            autocomplete="off" 
+            required
+          >
+          <button type="submit" class="add-btn" aria-label="Agregar tarea">+</button>
+        </div>
+        
+        <div class="extra-options">
+          <select id="task-category" class="chip-select">
+            <option value="Personal">🏠 Personal</option>
+            <option value="Trabajo">💼 Trabajo</option>
+            <option value="Salud">🏃 Salud</option>
+            <option value="Estudio">📚 Estudio</option>
+            <option value="Compras">🛒 Compras</option>
+          </select>
+
+          <select id="task-priority" class="chip-select">
+            <option value="baja">🟢 Normal</option>
+            <option value="media">🟡 Media</option>
+            <option value="alta">🔴 Alta</option>
+          </select>
+
+          <!-- Selector con hora exacta para recordatorio -->
+          <input 
+            type="datetime-local" 
+            id="task-datetime" 
+            class="date-input" 
+            title="Fecha y hora de recordatorio (opcional)"
+          >
+        </div>
+      </form>
+    </section>
+
+    <!-- Barra de filtros -->
+    <nav class="filter-bar">
+      <button class="filter-btn active" data-f="all">Todas</button>
+      <button class="filter-btn" data-f="pending">Pendientes</button>
+      <button class="filter-btn" data-f="reminder">⏰ Con alarma</button>
+      <button class="filter-btn" data-f="completed">Completadas</button>
+      <button class="filter-btn" data-f="alta">🔴 Alta</button>
+    </nav>
+
+    <!-- Lista de tareas -->
+    <main>
+      <ul id="task-list"></ul>
+
+      <div class="empty-state" id="empty-state">
+        <div class="empty-icon">✨</div>
+        <strong style="font-size: 1.05rem; margin-bottom: 4px;">Todo al día</strong>
+        <p style="font-size: 0.85rem;">No tienes tareas en esta sección.</p>
+      </div>
+    </main>
+
+    <!-- Pie con botón de prueba de notificación -->
+    <footer>
+      <button class="footer-btn" id="test-notif-btn">Probar notificación</button>
+      <button class="footer-btn danger" id="clear-btn">Limpiar completadas</button>
+    </footer>
+
+    <!-- Marca de agua sutil -->
+    <div class="watermark">by <span>Araz</span></div>
+  </div>
+
+  <script>
+    // Variables de estado
+    let tasks = [];
+    let filter = 'all';
+    let isDarkMode = false;
+    let soundEnabled = true;
+
+    // DOM
+    const form = document.getElementById('task-form');
+    const input = document.getElementById('task-input');
+    const catSelect = document.getElementById('task-category');
+    const prioSelect = document.getElementById('task-priority');
+    const datetimeSelect = document.getElementById('task-datetime');
+    const list = document.getElementById('task-list');
+    const counter = document.getElementById('counter');
+    const emptyState = document.getElementById('empty-state');
+    const clearBtn = document.getElementById('clear-btn');
+    const filterBtns = document.querySelectorAll('.filter-btn');
+    const dateLabel = document.getElementById('date-label');
+    const themeBtn = document.getElementById('theme-btn');
+    const soundBtn = document.getElementById('sound-btn');
+    const notifBtn = document.getElementById('notif-btn');
+    const testNotifBtn = document.getElementById('test-notif-btn');
+    const inAppBanner = document.getElementById('in-app-banner');
+    const bannerMsg = document.getElementById('banner-msg');
+    const bannerClose = document.getElementById('banner-close');
+
+    // Inicializar fecha
+    const now = new Date();
+    const dateStr = now.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'short' });
+    dateLabel.textContent = dateStr.charAt(0).toUpperCase() + dateStr.slice(1);
+
+    // Sonido sintetizado
+    function playSound(type = 'success') {
+      if (!soundEnabled) return;
+      try {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        if (!AudioCtx) return;
+        const ctx = new AudioCtx();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+
+        if (type === 'alarm') {
+          // Sonido doble de alerta/despertador
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(800, ctx.currentTime);
+          osc.frequency.setValueAtTime(1000, ctx.currentTime + 0.15);
+          gain.gain.setValueAtTime(0.25, ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.4);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start();
+          osc.stop(ctx.currentTime + 0.4);
+        } else {
+          // Campana de éxito al completar
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(523.25, ctx.currentTime);
+          osc.frequency.exponentialRampToValueAtTime(783.99, ctx.currentTime + 0.1);
+          osc.frequency.exponentialRampToValueAtTime(1046.50, ctx.currentTime + 0.2);
+          gain.gain.setValueAtTime(0.2, ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.45);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start();
+          osc.stop(ctx.currentTime + 0.45);
+        }
+      } catch (e) {}
+    }
+
+    function vibrate(ms = 35) {
+      if ('vibrate' in navigator) navigator.vibrate(ms);
+    }
+
+    // Mostrar alerta en pantalla (Banner in-app)
+    function showInAppAlert(title, message) {
+      document.getElementById('banner-title').textContent = title;
+      bannerMsg.textContent = message;
+      inAppBanner.classList.add('show');
+      playSound('alarm');
+      vibrate([200, 100, 200]);
+
+      setTimeout(() => {
+        inAppBanner.classList.remove('show');
+      }, 5000);
+    }
+
+    bannerClose.addEventListener('click', () => {
+      inAppBanner.classList.remove('show');
+    });
+
+    // Enviar notificación del sistema (Android / Navegador)
+    function triggerNotification(title, message) {
+      // 1. Mostrar siempre el banner in-app garantizado
+      showInAppAlert(title, message);
+
+      // 2. Intentar notificación del sistema Android si hay permisos
+      if ("Notification" in window && Notification.permission === "granted") {
+        try {
+          new Notification(title, {
+            body: message,
+            vibrate: [200, 100, 200]
+          });
+        } catch (e) {
+          // En algunos WebView se maneja internamente
+        }
+      }
+    }
+
+    // Solicitar permiso de notificaciones nativas
+    async function requestNotifPermission() {
+      if (!("Notification" in window)) {
+        showInAppAlert("Aviso", "Tu visor usa notificaciones internas en pantalla.");
+        return;
+      }
+      try {
+        const perm = await Notification.requestPermission();
+        if (perm === "granted") {
+          notifBtn.classList.add('active-notif');
+          triggerNotification("¡Notificaciones activadas!", "Recibirás avisos de tus tareas pendientes.");
+        } else {
+          showInAppAlert("Permiso", "Permiso de notificación no concedido.");
+        }
+      } catch (e) {
+        showInAppAlert("Aviso", "Notificaciones listas mediante aviso en pantalla.");
+      }
+    }
+
+    notifBtn.addEventListener('click', requestNotifPermission);
+
+    testNotifBtn.addEventListener('click', () => {
+      if (window.AndroidBridge) {
+        window.AndroidBridge.testNotification("Mis Tareas", "¡Notificación nativa de Android funcionando al 100%!");
+      } else {
+        triggerNotification("🔔 Prueba de Recordatorio", "¡Así se verán tus recordatorios de tareas!");
+      }
+    });
+
+    // Verificador periódico de tareas con alarma (revisa cada 15 segundos)
+    function checkReminders() {
+      const current = new Date();
+      let changed = false;
+
+      tasks.forEach(task => {
+        if (!task.completed && task.dueDatetime && !task.notified) {
+          const taskTime = new Date(task.dueDatetime);
+          if (current >= taskTime) {
+            triggerNotification("⏰ Tarea pendiente", task.text);
+            task.notified = true;
+            changed = true;
+          }
+        }
+      });
+
+      if (changed) save();
+    }
+
+    setInterval(checkReminders, 15000);
+
+    // Cargar datos
+    function load() {
+      try {
+        const saved = localStorage.getItem('app_tareas_pro_data_v2');
+        if (saved) {
+          tasks = JSON.parse(saved);
+        } else {
+          // Migrar versión anterior si existe
+          const old = localStorage.getItem('app_tareas_pro_data');
+          if (old) tasks = JSON.parse(old);
+        }
+
+        isDarkMode = localStorage.getItem('app_theme_dark') === 'true';
+        if (isDarkMode) {
+          document.body.classList.add('dark');
+          themeBtn.textContent = '☀️';
+        }
+
+        soundEnabled = localStorage.getItem('app_sound_enabled') !== 'false';
+        soundBtn.textContent = soundEnabled ? '🔊' : '🔇';
+
+        if ("Notification" in window && Notification.permission === "granted") {
+          notifBtn.classList.add('active-notif');
+        }
+      } catch (e) {
+        tasks = [];
+      }
+      render();
+    }
+
+    function save() {
+      try {
+        localStorage.setItem('app_tareas_pro_data_v2', JSON.stringify(tasks));
+      } catch (e) {}
+      render();
+    }
+
+    // Botones Header
+    themeBtn.addEventListener('click', () => {
+      isDarkMode = !isDarkMode;
+      document.body.classList.toggle('dark', isDarkMode);
+      themeBtn.textContent = isDarkMode ? '☀️' : '🌙';
+      localStorage.setItem('app_theme_dark', isDarkMode);
+      vibrate(25);
+    });
+
+    soundBtn.addEventListener('click', () => {
+      soundEnabled = !soundEnabled;
+      soundBtn.textContent = soundEnabled ? '🔊' : '🔇';
+      localStorage.setItem('app_sound_enabled', soundEnabled);
+      if (soundEnabled) playSound('success');
+      vibrate(25);
+    });
+
+    // Agregar tarea
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const text = input.value.trim();
+      if (!text) return;
+
+      const newTask = {
+        id: Date.now().toString(),
+        text: text,
+        category: catSelect.value,
+        priority: prioSelect.value,
+        dueDatetime: datetimeSelect.value || null,
+        notified: false,
+        completed: false
+      };
+
+      // Si tiene fecha y estamos en la APK nativa, programar alarma real en Android
+      if (newTask.dueDatetime && window.AndroidBridge) {
+        try {
+          const epoch = new Date(newTask.dueDatetime).getTime();
+          if (epoch > Date.now()) {
+            window.AndroidBridge.scheduleAlarm(newTask.id, "Mis Tareas", "⏰ " + newTask.text, epoch);
+          }
+        } catch (err) {
+          console.error("Error programando alarma nativa:", err);
+        }
+      }
+
+      tasks.unshift(newTask);
+      input.value = '';
+      datetimeSelect.value = '';
+      vibrate(30);
+      save();
+
+      // Si puso fecha y hora y estamos en navegador, pedir permiso web
+      if (newTask.dueDatetime && "Notification" in window && Notification.permission === "default") {
+        requestNotifPermission();
+      }
+    });
+
+    // Toggle
+    function toggle(id) {
+      tasks = tasks.map(t => {
+        if (t.id === id) {
+          const nextState = !t.completed;
+          if (nextState) {
+            playSound('success');
+            vibrate(45);
+            // Cancelar alarma nativa al completar
+            if (window.AndroidBridge) {
+              try { window.AndroidBridge.cancelAlarm(t.id); } catch (e) {}
+            }
+          } else {
+            vibrate(20);
+            // Reprogramar si se desmarca y está en el futuro
+            if (t.dueDatetime && window.AndroidBridge) {
+              const epoch = new Date(t.dueDatetime).getTime();
+              if (epoch > Date.now()) {
+                window.AndroidBridge.scheduleAlarm(t.id, "Mis Tareas", "⏰ " + t.text, epoch);
+              }
+            }
+          }
+          return { ...t, completed: nextState };
+        }
+        return t;
+      });
+      save();
+    }
+
+    // Borrar
+    function remove(id) {
+      if (window.AndroidBridge) {
+        try { window.AndroidBridge.cancelAlarm(id); } catch (e) {}
+      }
+      tasks = tasks.filter(t => t.id !== id);
+      vibrate(25);
+      save();
+    }
+
+    clearBtn.addEventListener('click', () => {
+      const prev = tasks.length;
+      tasks = tasks.filter(t => !t.completed);
+      if (tasks.length !== prev) {
+        vibrate(30);
+        save();
+      }
+    });
+
+    // Filtros
+    filterBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        filterBtns.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        filter = btn.dataset.f;
+        render();
+      });
+    });
+
+    // Formatear fecha y hora para mostrar
+    function formatDateTime(dtStr) {
+      if (!dtStr) return '';
+      const d = new Date(dtStr);
+      return d.toLocaleDateString('es-ES', { day: 'numeric', month: 'short' }) + ' ' + 
+             d.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+    }
+
+    // Renderizar
+    function render() {
+      let filtered = tasks;
+      if (filter === 'pending') filtered = tasks.filter(t => !t.completed);
+      else if (filter === 'completed') filtered = tasks.filter(t => t.completed);
+      else if (filter === 'alta') filtered = tasks.filter(t => t.priority === 'alta');
+      else if (filter === 'reminder') filtered = tasks.filter(t => !t.completed && t.dueDatetime);
+
+      list.innerHTML = '';
+
+      filtered.forEach(task => {
+        const li = document.createElement('li');
+        li.className = `task-item priority-${task.priority || 'baja'} ${task.completed ? 'completed' : ''}`;
+
+        const checkBtn = document.createElement('button');
+        checkBtn.className = 'check-btn';
+        checkBtn.innerHTML = task.completed ? '✅' : '';
+        checkBtn.onclick = () => toggle(task.id);
+
+        const contentDiv = document.createElement('div');
+        contentDiv.className = 'task-content';
+
+        const textSpan = document.createElement('span');
+        textSpan.className = 'task-text';
+        textSpan.textContent = task.text;
+
+        const metaDiv = document.createElement('div');
+        metaDiv.className = 'task-meta';
+
+        const catSpan = document.createElement('span');
+        catSpan.className = 'tag-category';
+        catSpan.textContent = task.category || 'Personal';
+        metaDiv.appendChild(catSpan);
+
+        if (task.dueDatetime) {
+          const dateSpan = document.createElement('span');
+          dateSpan.className = 'tag-date';
+          dateSpan.textContent = '⏰ ' + formatDateTime(task.dueDatetime);
+          metaDiv.appendChild(dateSpan);
+        }
+
+        contentDiv.appendChild(textSpan);
+        contentDiv.appendChild(metaDiv);
+
+        const delBtn = document.createElement('button');
+        delBtn.className = 'del-btn';
+        delBtn.innerHTML = '🗑️';
+        delBtn.title = 'Eliminar';
+        delBtn.onclick = () => remove(task.id);
+
+        li.appendChild(checkBtn);
+        li.appendChild(contentDiv);
+        li.appendChild(delBtn);
+
+        list.appendChild(li);
+      });
+
+      const pendingCount = tasks.filter(t => !t.completed).length;
+      counter.textContent = `${pendingCount} ${pendingCount === 1 ? 'pendiente' : 'pendientes'}`;
+
+      if (filtered.length === 0) {
+        emptyState.classList.add('show');
+      } else {
+        emptyState.classList.remove('show');
+      }
+    }
+
+    load();
+  </script>
+</body>
+</html>
