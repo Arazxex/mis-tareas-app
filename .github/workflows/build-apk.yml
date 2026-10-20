@@ -23,8 +23,10 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Configurar Gradle
+      - name: Configurar Gradle 8.6
         uses: gradle/actions/setup-gradle@v3
+        with:
+          gradle-version: '8.6'
 
       - name: Compilar archivo APK (Debug)
         run: gradle assembleDebug --stacktrace
